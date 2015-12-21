@@ -20,6 +20,10 @@ public:
 	// Called every frame
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
+	/** Cells on the edges of the grid are considered neighbors if the grid is repeating. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Life Simulator Core")
+	bool Repeating;
+
 	/** Generates a new grid with the specified size. Deletes the old grid. */
 	UFUNCTION(BlueprintCallable, Category="Life Simulator Core")
 	void GenerateGrid(int32 size);
@@ -38,6 +42,7 @@ public:
 
 private:
 	int GetLivingNeighbors(int gridX, int gridY);
+	bool IsNeighborAlive(int gridX, int gridY);
 
 	bool **mGrid;
 	bool **mGridNextState;

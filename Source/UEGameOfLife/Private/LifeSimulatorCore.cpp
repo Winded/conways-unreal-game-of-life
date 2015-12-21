@@ -11,6 +11,7 @@ ULifeSimulatorCore::ULifeSimulatorCore()
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = false;
 
+	Repeating = false;
 	mGrid = 0;
 	mGridNextState = 0;
 	mSize = 0;
@@ -113,35 +114,52 @@ int ULifeSimulatorCore::GetLivingNeighbors(int gridX, int gridY)
 		gridX < 1 || gridY < 1)
 		return 0;
 
-	int gX = gridX - 1;
-	int gY = gridY - 1;
 	int count = 0;
 
 	// Right side
-	if (gridX != mSize && mGrid[gX + 1][gY])
+	if (IsNeighborAlive(gridX + 1, gridY))
 		count++;
 	// Right Bottom side
-	if (gridX != mSize && gridY != mSize && mGrid[gX + 1][gY + 1])
+	if (IsNeighborAlive(gridX + 1, gridY + 1))
 		count++;
 	// Bottom side
-	if (gridY != mSize && mGrid[gX][gY + 1])
+	if (IsNeighborAlive(gridX, gridY + 1))
 		count++;
 	// Left Bottom side
-	if (gridX != 1 && gridY != mSize && mGrid[gX - 1][gY + 1])
+	if (IsNeighborAlive(gridX - 1, gridY + 1))
 		count++;
 	// Left side
-	if (gridX != 1 && mGrid[gX - 1][gY])
+	if (IsNeighborAlive(gridX - 1, gridY))
 		count++;
 	// Left Upper side
-	if (gridX != 1 && gridY != 1 && mGrid[gX - 1][gY - 1])
+	if (IsNeighborAlive(gridX - 1, gridY - 1))
 		count++;
 	// Upper side
-	if (gridY != 1 && mGrid[gX][gY - 1])
+	if (IsNeighborAlive(gridX, gridY - 1))
 		count++;
 	// Right Upper side
-	if (gridX != mSize && gridY != 1 && mGrid[gX + 1][gY - 1])
+	if (IsNeighborAlive(gridX + 1, gridY - 1))
 		count++;
 
 	return count;
+}
+
+bool ULifeSimulatorCore::IsNeighborAlive(int gridX, int gridY)
+{
+	if (Repeating && gridX > mSize)
+		gridX = 1;
+	else if (Repeating && gridX < 1)
+		gridX = mSize;
+	else if (!Repeating && (gridX < 1 || gridX > mSize))
+		return false;
+
+	if (Repeating && gridY > mSize)
+		gridY = 1;
+	else if (Repeating && gridY < 1)
+		gridY = mSize;
+	else if (!Repeating && (gridY < 1 || gridY > mSize))
+		return false;
+
+	return mGrid[gridX - 1][gridY - 1];
 }
 
