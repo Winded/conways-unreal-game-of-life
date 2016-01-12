@@ -5,7 +5,7 @@
 
 // Sets default values
 AGOLPawn::AGOLPawn()
-    : mLifeSim(0), mMoving(false), mTargetPos(FVector::ZeroVector), mTargetRot(FRotator::ZeroRotator),
+    : LifeSimulator(0), mMoving(false), mTargetPos(FVector::ZeroVector), mTargetRot(FRotator::ZeroRotator),
       mLocked(false), mHorizontalMovement(0.0f), mVerticalMovement(0.0f), mLockDistance(0.0f)
 {
     // Defaults
@@ -33,10 +33,18 @@ void AGOLPawn::BeginPlay()
 {
     Super::BeginPlay();
 
+    APlayerController *pc = Cast<APlayerController>(GetController());
+    pc->bShowMouseCursor = true;
+    if(HUDClass) {
+        mHUD = CreateWidget<UUserWidget>(pc, HUDClass);
+        if(mHUD)
+            mHUD->AddToViewport();
+    }
+
     // Find a life
     TActorIterator<ALifeSimulator> it(GetWorld());
     if(it) {
-        mLifeSim = *it;
+        LifeSimulator = *it;
     }
 
     mLockDistance = MinimumDistance;
@@ -90,7 +98,7 @@ void AGOLPawn::Tick( float DeltaTime )
 }
 
 // Called to bind functionality to input
-void AGOLPawn::SetupPlayerInputComponent(class UInputComponent* InputComponent)
+void AGOLPawn::SetupPlayerInputComponent(UInputComponent* InputComponent)
 {
     Super::SetupPlayerInputComponent(InputComponent);
 
@@ -215,21 +223,21 @@ void AGOLPawn::ClearHorizontalMovement()
 
 void AGOLPawn::ToggleSimulation()
 {
-    // TODO
+    LifeSimulator->Simulating = !LifeSimulator->Simulating;
 }
 
 void AGOLPawn::ActivateCell()
 {
-    // TODO
+    LifeSimulator->ActivationStatus = AS_Activating;
 }
 
 void AGOLPawn::DeactivateCell()
 {
-    // TODO
+    LifeSimulator->ActivationStatus = AS_Deactivating;
 }
 
 void AGOLPawn::ClearActivationStatus()
 {
-    // TODO
+    LifeSimulator->ActivationStatus = AS_None;
 }
 

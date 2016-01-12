@@ -7,13 +7,17 @@ ALifeCell::ALifeCell()
     GridX = 0;
     GridY = 0;
 
-    PrimaryActorTick.bCanEverTick = false;
+    Light = CreateDefaultSubobject<UPointLightComponent>(TEXT("Light"));
+    Light->AttachTo(GetStaticMeshComponent());
+
+    PrimaryActorTick.bCanEverTick = true;
 }
 
 void ALifeCell::BeginPlay()
 {
     Super::BeginPlay();
     GetStaticMeshComponent()->SetMaterial(0, NormalMaterial);
+    Light->SetVisibility(false);
 }
 
 bool ALifeCell::IsHighlighted()

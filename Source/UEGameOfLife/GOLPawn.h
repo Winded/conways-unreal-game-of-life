@@ -5,6 +5,7 @@
 #include "GameFramework/Pawn.h"
 #include "Camera/CameraComponent.h"
 #include "LifeSimulator.h"
+#include <UserWidget.h>
 #include "GOLPawn.generated.h"
 
 UCLASS()
@@ -15,10 +16,16 @@ class AGOLPawn : public APawn
     public:
         AGOLPawn();
 
-        UPROPERTY(BlueprintReadOnly, Category="Game Of Life")
+        UPROPERTY(BlueprintReadOnly, Category="Components")
         USceneComponent *CameraRoot;
-        UPROPERTY(BlueprintReadOnly, Category="Game Of Life")
+        UPROPERTY(BlueprintReadOnly, Category="Components")
         UCameraComponent *Camera;
+
+        UPROPERTY(EditAnywhere, Category="GUI")
+        TSubclassOf<UUserWidget> HUDClass;
+
+        UPROPERTY(BlueprintReadOnly, Category="Game Of Life")
+        ALifeSimulator *LifeSimulator;
 
         UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Game Of Life")
         FVector LockPoint;
@@ -47,7 +54,7 @@ class AGOLPawn : public APawn
         virtual void Tick( float DeltaSeconds ) override;
 
         // Called to bind functionality to input
-        virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
+        virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 
         UFUNCTION(BlueprintCallable, BlueprintPure, Category="Game Of Life")
         bool IsLocked();
@@ -77,7 +84,7 @@ class AGOLPawn : public APawn
         void ClearActivationStatus();
 
     private:
-        ALifeSimulator *mLifeSim;
+        UUserWidget *mHUD;
 
         bool mMoving;
         FVector mTargetPos;

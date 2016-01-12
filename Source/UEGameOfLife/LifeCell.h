@@ -15,7 +15,7 @@ class ALifeCell : public AStaticMeshActor
     public:
         ALifeCell();
 
-        UPROPERTY(BlueprintReadOnly, Category="Life Cell")
+        UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="Components")
         UPointLightComponent *Light;
 
         UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Life Cell")
@@ -23,7 +23,7 @@ class ALifeCell : public AStaticMeshActor
         UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Life Cell")
         UMaterialInstance *ActiveMaterial;
 
-        UPROPERTY(BlueprintReadOnly, Category="Life Cell")
+        UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="Life Cell")
         ALifeSimulator *Simulator;
 
         UPROPERTY(BlueprintReadOnly, Category="Life Cell")

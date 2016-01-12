@@ -148,11 +148,11 @@ void ALifeSimulator::SimulationTick()
 void ALifeSimulator::AddCell(ALifeCell *cell)
 {
     cell->Simulator = this;
-    FVector pos = GetActorLocation();
-    pos.X += (float)(cell->GridX) * Spacing - (float)mSize / 2.f;
-    pos.Y += (float)(cell->GridY) * Spacing - (float)mSize / 2.f;
-    cell->SetActorLocation(pos);
     mCells.Add(cell);
+    FVector pos = GetActorLocation();
+    pos.X += (float)cell->GridX * Spacing - (float)mSize * Spacing / 2.f - Spacing / 2.f;
+    pos.Y += (float)cell->GridY * Spacing - (float)mSize * Spacing / 2.f - Spacing / 2.f;
+    cell->SetActorLocation(pos);
 }
 
 bool ALifeSimulator::GetCellValue(int32 gridX, int32 gridY)

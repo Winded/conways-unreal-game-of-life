@@ -27,7 +27,7 @@ class ALifeSimulator : public AActor
         bool Simulating;
 
         UPROPERTY(EditAnywhere, Category="Life Simulator")
-        UClass *CellClass;
+        TSubclassOf<ALifeCell> CellClass;
 
         UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Life Simulator")
         float Spacing;
