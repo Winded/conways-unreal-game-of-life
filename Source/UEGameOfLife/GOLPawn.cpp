@@ -5,7 +5,7 @@
 
 // Sets default values
 AGOLPawn::AGOLPawn()
-    : LifeSimulator(0), mMoving(false), mTargetPos(FVector::ZeroVector), mTargetRot(FRotator::ZeroRotator),
+    : LifeSimulator(0), mMoving(false), mMovingFaster(false), mTargetPos(FVector::ZeroVector), mTargetRot(FRotator::ZeroRotator),
       mLocked(false), mHorizontalMovement(0.0f), mVerticalMovement(0.0f), mLockDistance(0.0f)
 {
     // Defaults
@@ -17,6 +17,7 @@ AGOLPawn::AGOLPawn()
     MaximumDistance = 10000.0f;
     ZoomInterval = 100.0f;
     Speed = 10.0f;
+    FasterSpeed = 25.0f;
 
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -86,8 +87,9 @@ void AGOLPawn::Tick( float DeltaTime )
 
             // Process free movement
             FVector pos = CameraRoot->GetComponentLocation();
-            pos += CameraRoot->GetForwardVector() * Speed * mVerticalMovement;
-            pos += CameraRoot->GetRightVector() * Speed * mHorizontalMovement;
+            float speed = mMovingFaster ? FasterSpeed : Speed;
+            pos += CameraRoot->GetForwardVector() * speed * mVerticalMovement;
+            pos += CameraRoot->GetRightVector() * speed * mHorizontalMovement;
             CameraRoot->SetWorldLocation(pos);
         }
     }
@@ -118,6 +120,9 @@ void AGOLPawn::SetupPlayerInputComponent(UInputComponent* InputComponent)
     InputComponent->BindAction("MoveRight", IE_Released, this, &AGOLPawn::ClearHorizontalMovement);
     InputComponent->BindAction("MoveLeft", IE_Pressed, this, &AGOLPawn::MoveLeft);
     InputComponent->BindAction("MoveLeft", IE_Released, this, &AGOLPawn::ClearHorizontalMovement);
+
+    InputComponent->BindAction("MoveFaster", IE_Pressed, this, &AGOLPawn::MoveFaster);
+    InputComponent->BindAction("MoveFaster", IE_Released, this, &AGOLPawn::MoveSlower);
 
     InputComponent->BindAction("ToggleSimulation", IE_Pressed, this, &AGOLPawn::ToggleSimulation);
 
@@ -150,6 +155,15 @@ void AGOLPawn::SetLocked(bool locked)
         CameraRoot->SetWorldRotation(camRot);
     }
     mLocked = locked;
+}
+
+void AGOLPawn::RepositionCamera()
+{
+    SetLocked(true);
+    if(LifeSimulator) {
+        int size = LifeSimulator->GetSize();
+        mLockDistance = FMath::Clamp(150.0f * size, MinimumDistance, MaximumDistance);
+    }
 }
 
 void AGOLPawn::ChangeCameraMode()
@@ -219,6 +233,16 @@ void AGOLPawn::ClearVerticalMovement()
 void AGOLPawn::ClearHorizontalMovement()
 {
     mHorizontalMovement = 0.0f;
+}
+
+void AGOLPawn::MoveFaster()
+{
+    mMovingFaster = true;
+}
+
+void AGOLPawn::MoveSlower()
+{
+    mMovingFaster = false;
 }
 
 void AGOLPawn::ToggleSimulation()

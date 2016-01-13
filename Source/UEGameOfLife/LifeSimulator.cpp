@@ -9,7 +9,7 @@ ALifeSimulator::ALifeSimulator()
     Spacing = 10.0f;
     SimulationInterval = 0.1f;
     ActivationStatus = AS_None;
-    Repeating = false;
+    Repeating = true;
 
     PrimaryActorTick.bCanEverTick = true;
 }

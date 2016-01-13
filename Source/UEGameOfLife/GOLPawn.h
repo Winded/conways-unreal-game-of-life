@@ -42,10 +42,13 @@ class AGOLPawn : public APawn
         UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Game Of Life")
         float MaximumDistance;
 
+        /** How much do we change distance per scroll */
         UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Game Of Life")
         float ZoomInterval;
         UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Game Of Life")
         float Speed;
+        UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Game Of Life")
+        float FasterSpeed;
 
         // Called when the game starts or when spawned
         virtual void BeginPlay() override;
@@ -60,6 +63,10 @@ class AGOLPawn : public APawn
         bool IsLocked();
         UFUNCTION(BlueprintCallable, Category="Game Of Life")
         void SetLocked(bool locked);
+
+        /** Lock camera and adjust distance to cell grid's size */
+        UFUNCTION(BlueprintCallable, Category="Game Of Life")
+        void RepositionCamera();
 
     protected:
         void ChangeCameraMode();
@@ -77,6 +84,9 @@ class AGOLPawn : public APawn
         void ClearVerticalMovement();
         void ClearHorizontalMovement();
 
+        void MoveFaster();
+        void MoveSlower();
+
         void ToggleSimulation();
 
         void ActivateCell();
@@ -87,6 +97,7 @@ class AGOLPawn : public APawn
         UUserWidget *mHUD;
 
         bool mMoving;
+        bool mMovingFaster;
         FVector mTargetPos;
         FRotator mTargetRot;
 
