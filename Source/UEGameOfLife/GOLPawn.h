@@ -64,6 +64,10 @@ class AGOLPawn : public APawn
         UFUNCTION(BlueprintCallable, Category="Game Of Life")
         void SetLocked(bool locked);
 
+        /** Set player's cursor position to screen center */
+        UFUNCTION(BlueprintCallable, Category="Game Of Life")
+        void CenterMousePosition();
+
         /** Lock camera and adjust distance to cell grid's size */
         UFUNCTION(BlueprintCallable, Category="Game Of Life")
         void RepositionCamera();
@@ -77,13 +81,6 @@ class AGOLPawn : public APawn
         void MoveCameraFurther();
         void MoveCameraCloser();
 
-        void MoveForward();
-        void MoveBackward();
-        void MoveRight();
-        void MoveLeft();
-        void ClearVerticalMovement();
-        void ClearHorizontalMovement();
-
         void MoveFaster();
         void MoveSlower();
 
@@ -92,6 +89,12 @@ class AGOLPawn : public APawn
         void ActivateCell();
         void DeactivateCell();
         void ClearActivationStatus();
+
+        void MoveVertical(float delta);
+        void MoveHorizontal(float delta);
+
+        void RotateVertical(float delta);
+        void RotateHorizontal(float delta);
 
     private:
         UUserWidget *mHUD;
@@ -105,6 +108,9 @@ class AGOLPawn : public APawn
 
         float mHorizontalMovement;
         float mVerticalMovement;
+
+        float mRotateVertical;
+        float mRotateHorizontal;
 
         float mLockDistance;
 };

@@ -5,8 +5,10 @@
 
 // Sets default values
 AGOLPawn::AGOLPawn()
-    : LifeSimulator(0), mMoving(false), mMovingFaster(false), mTargetPos(FVector::ZeroVector), mTargetRot(FRotator::ZeroRotator),
-      mLocked(false), mHorizontalMovement(0.0f), mVerticalMovement(0.0f), mLockDistance(0.0f)
+    : LifeSimulator(0), mMoving(false), mMovingFaster(false), mHUD(0),
+      mTargetPos(FVector::ZeroVector), mTargetRot(FRotator::ZeroRotator),
+      mLocked(false), mHorizontalMovement(0.0f), mVerticalMovement(0.0f),
+      mRotateVertical(0.0f), mRotateHorizontal(0.0f), mLockDistance(0.0f)
 {
     // Defaults
     LockPoint = FVector::ZeroVector;
@@ -49,27 +51,25 @@ void AGOLPawn::BeginPlay()
     }
 
     mLockDistance = MinimumDistance;
+
+    LifeSimulator->GenerateGrid(5);
+    SetLocked(true);
 }
 
 // Called every frame
 void AGOLPawn::Tick( float DeltaTime )
 {
     Super::Tick(DeltaTime);
-    APlayerController *pc = Cast<APlayerController>(GetController());
-    if(!pc) {
-        return;
-    }
 
     if(mLocked) {
         // Rotate camera by mouse delta
         if(mMoving) {
-            float mouseX, mouseY;
-            pc->GetInputMouseDelta(mouseX, mouseY);
             FRotator rot = CameraRoot->GetComponentRotation();
-            rot.Pitch = FMath::Clamp(rot.Pitch + mouseY, MinimumLockedPitch, MaximumLockedPitch);
-            rot.Yaw = rot.Yaw + mouseX;
+            rot.Pitch = FMath::Clamp(rot.Pitch + mRotateVertical, MinimumLockedPitch, MaximumLockedPitch);
+            rot.Yaw = rot.Yaw + mRotateHorizontal;
             rot.Roll = 0.0f;
             CameraRoot->SetWorldRotation(rot);
+            CenterMousePosition();
         }
 
         // Apply distance to target pos
@@ -78,12 +78,11 @@ void AGOLPawn::Tick( float DeltaTime )
     else {
         if(mMoving) {
             //Rotate camera by mouse delta
-            float mouseX, mouseY;
-            pc->GetInputMouseDelta(mouseX, mouseY);
             FRotator rot = CameraRoot->GetComponentRotation();
-            rot.Pitch = rot.Pitch + mouseY;
-            rot.Yaw = rot.Yaw + mouseX;
+            rot.Pitch = rot.Pitch + mRotateVertical;
+            rot.Yaw = rot.Yaw + mRotateHorizontal;
             CameraRoot->SetWorldRotation(rot);
+            CenterMousePosition();
 
             // Process free movement
             FVector pos = CameraRoot->GetComponentLocation();
@@ -112,15 +111,6 @@ void AGOLPawn::SetupPlayerInputComponent(UInputComponent* InputComponent)
     InputComponent->BindAction("MoveCameraFurther", IE_Pressed, this, &AGOLPawn::MoveCameraFurther);
     InputComponent->BindAction("MoveCameraCloser", IE_Pressed, this, &AGOLPawn::MoveCameraCloser);
 
-    InputComponent->BindAction("MoveForward", IE_Pressed, this, &AGOLPawn::MoveForward);
-    InputComponent->BindAction("MoveForward", IE_Released, this, &AGOLPawn::ClearVerticalMovement);
-    InputComponent->BindAction("MoveBackward", IE_Pressed, this, &AGOLPawn::MoveBackward);
-    InputComponent->BindAction("MoveBackward", IE_Released, this, &AGOLPawn::ClearVerticalMovement);
-    InputComponent->BindAction("MoveRight", IE_Pressed, this, &AGOLPawn::MoveRight);
-    InputComponent->BindAction("MoveRight", IE_Released, this, &AGOLPawn::ClearHorizontalMovement);
-    InputComponent->BindAction("MoveLeft", IE_Pressed, this, &AGOLPawn::MoveLeft);
-    InputComponent->BindAction("MoveLeft", IE_Released, this, &AGOLPawn::ClearHorizontalMovement);
-
     InputComponent->BindAction("MoveFaster", IE_Pressed, this, &AGOLPawn::MoveFaster);
     InputComponent->BindAction("MoveFaster", IE_Released, this, &AGOLPawn::MoveSlower);
 
@@ -130,6 +120,12 @@ void AGOLPawn::SetupPlayerInputComponent(UInputComponent* InputComponent)
     InputComponent->BindAction("ActivateCell", IE_Released, this, &AGOLPawn::ClearActivationStatus);
     InputComponent->BindAction("DeactivateCell", IE_Pressed, this, &AGOLPawn::DeactivateCell);
     InputComponent->BindAction("DeactivateCell", IE_Released, this, &AGOLPawn::ClearActivationStatus);
+
+    InputComponent->BindAxis("MoveCameraVertical", this, &AGOLPawn::MoveVertical);
+    InputComponent->BindAxis("MoveCameraHorizontal", this, &AGOLPawn::MoveHorizontal);
+
+    InputComponent->BindAxis("RotateCameraVertical", this, &AGOLPawn::RotateVertical);
+    InputComponent->BindAxis("RotateCameraHorizontal", this, &AGOLPawn::RotateHorizontal);
 }
 
 bool AGOLPawn::IsLocked()
@@ -157,6 +153,15 @@ void AGOLPawn::SetLocked(bool locked)
     mLocked = locked;
 }
 
+void AGOLPawn::CenterMousePosition()
+{
+    APlayerController *pc = Cast<APlayerController>(GetController());
+    if(!pc) return;
+    FViewport *vp = pc->GetLocalPlayer()->ViewportClient->Viewport;
+    FIntPoint size = vp->GetSizeXY();
+    vp->SetMouse(size.X / 2, size.Y / 2);
+}
+
 void AGOLPawn::RepositionCamera()
 {
     SetLocked(true);
@@ -173,20 +178,16 @@ void AGOLPawn::ChangeCameraMode()
 
 void AGOLPawn::MoveCameraBegin()
 {
-    APlayerController *pc = Cast<APlayerController>(GetController());
-    if(pc) {
-        pc->bShowMouseCursor = false;
-        mMoving = true;
-    }
+    APlayerController *pc = CastChecked<APlayerController>(GetController());
+    pc->bShowMouseCursor = false;
+    mMoving = true;
 }
 
 void AGOLPawn::MoveCameraEnd()
 {
-    APlayerController *pc = Cast<APlayerController>(GetController());
-    if(pc) {
-        pc->bShowMouseCursor = true;
-        mMoving = false;
-    }
+    APlayerController *pc = CastChecked<APlayerController>(GetController());
+    pc->bShowMouseCursor = true;
+    mMoving = false;
 }
 
 void AGOLPawn::MoveCameraFurther()
@@ -203,36 +204,6 @@ void AGOLPawn::MoveCameraCloser()
         return;
 
     mLockDistance = FMath::Clamp(mLockDistance - ZoomInterval, MinimumDistance, MaximumDistance);
-}
-
-void AGOLPawn::MoveForward()
-{
-    mVerticalMovement = 1.0f;
-}
-
-void AGOLPawn::MoveBackward()
-{
-    mVerticalMovement = -1.0f;
-}
-
-void AGOLPawn::MoveRight()
-{
-    mHorizontalMovement = 1.0f;
-}
-
-void AGOLPawn::MoveLeft()
-{
-    mHorizontalMovement = -1.0f;
-}
-
-void AGOLPawn::ClearVerticalMovement()
-{
-    mVerticalMovement = 0.0f;
-}
-
-void AGOLPawn::ClearHorizontalMovement()
-{
-    mHorizontalMovement = 0.0f;
 }
 
 void AGOLPawn::MoveFaster()
@@ -265,3 +236,22 @@ void AGOLPawn::ClearActivationStatus()
     LifeSimulator->ActivationStatus = AS_None;
 }
 
+void AGOLPawn::MoveVertical(float delta)
+{
+    mVerticalMovement = delta;
+}
+
+void AGOLPawn::MoveHorizontal(float delta)
+{
+    mHorizontalMovement = delta;
+}
+
+void AGOLPawn::RotateVertical(float delta)
+{
+    mRotateVertical = delta;
+}
+
+void AGOLPawn::RotateHorizontal(float delta)
+{
+    mRotateHorizontal = delta;
+}
